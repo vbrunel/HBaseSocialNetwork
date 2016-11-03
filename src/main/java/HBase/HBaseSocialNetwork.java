@@ -25,6 +25,9 @@ import java.text.SimpleDateFormat;
 
 public class HBaseSocialNetwork {
 
+    private static Configuration config;
+    private static HTable table;
+
     public static Writable toWritable(ArrayList<String> list) {
         Writable[] content = new Writable[list.size()];
         for (int i = 0; i < content.length; i++) {
@@ -42,77 +45,99 @@ public class HBaseSocialNetwork {
         return list;
     }
 
+    /***public static addPersonn(){
+
+    }***/
+
     public static void main (String args[]) throws IOException {
 
-        Configuration config = HBaseConfiguration.create();
-        HTable table = new HTable(config, "vbrunelHBaseTable");
+        config = HBaseConfiguration.create();
+        table = new HTable(config, "vbrunelHBaseTable");
         Scanner scanner = new Scanner(System.in);
         boolean exit = false;
-        boolean friendExit = false;
+        boolean secondExit = false;
 
         while(!exit){
 
             System.out.println("Choose any option :");
             System.out.println("1. Add a new personn");
-            System.out.println("2. Exit");
+            System.out.println("2. Exit\n");
 
             String option = scanner.next();
-            String bestFriend;
 
             if (option.equals("1")) {
                 ArrayList<String> friends = new ArrayList<String>();
                 System.out.println("First Name :");
                 String id = scanner.next();
-                System.out.println("Family Name :");
-                String familyName = scanner.next();
-                do {
-                    System.out.println("BFF :");
-                    bestFriend = scanner.next();
-                } while (bestFriend.equals(""));
-                System.out.println("Birthday :");
-                String birthDate = scanner.next();
-                System.out.println("Address :");
-                String address = scanner.next();
-                System.out.println("Phone Number :");
-                String phoneNumber = scanner.next();
-                System.out.println("Description :");
-                String description = scanner.next();
-                while(!friendExit){
-                    System.out.println("1. Add New Friend");
-                    System.out.println("2. Continue");
-                    String optionFriend = scanner.next();
+                System.out.println("BFF :");
+                String bestFriend = scanner.next();
+                while(!secondExit) {
 
-                    if(optionFriend.equals("1")){
-                        System.out.println("Friend Name :");
-                        String newFriend = scanner.next();
-                        friends.add(newFriend);
+                    Put p = new Put(Bytes.toBytes(id));
+                    p.add(Bytes.toBytes("friends"), Bytes.toBytes("BFF"), Bytes.toBytes(bestFriend));
+                    table.put(p);
+
+                    System.out.println("\nCurrent profile :" + id);
+                    System.out.println("1. Add family name");
+                    System.out.println("2. Add birthdate");
+                    System.out.println("3. Add address");
+                    System.out.println("4. Add phone number");
+                    System.out.println("5. Add bio");
+                    System.out.println("6. Add friend");
+                    System.out.println("7. Exit profile and save\n");
+                    String secondOption = scanner.next();
+
+                    switch (Integer.parseInt(secondOption)) {
+
+                        case 1:
+                            System.out.println("Family Name :");
+                            String familyName = scanner.next();
+                            p.add(Bytes.toBytes("info"), Bytes.toBytes("familyName"), Bytes.toBytes(familyName));
+                            table.put(p);
+                            break;
+                        case 2:
+                            System.out.println("Birthday :");
+                            String birthDate = scanner.next();
+                            p.add(Bytes.toBytes("info"), Bytes.toBytes("birthday"), Bytes.toBytes(birthDate));
+                            table.put(p);
+                            break;
+                        case 3:
+                            System.out.println("Address :");
+                            String address = scanner.next();
+                            p.add(Bytes.toBytes("info"), Bytes.toBytes("address"), Bytes.toBytes(address));
+                            break;
+                        case 4:
+                            System.out.println("Phone Number :");
+                            String phoneNumber = scanner.next();
+                            p.add(Bytes.toBytes("info"), Bytes.toBytes("phoneNumber"), Bytes.toBytes(phoneNumber));
+                            table.put(p);
+                            break;
+                        case 5:
+                            System.out.println("Bio :");
+                            String bio = scanner.next();
+                            p.add(Bytes.toBytes("info"), Bytes.toBytes("description"), Bytes.toBytes(bio));
+                            table.put(p);
+                            break;
+                        case 6:
+                            System.out.println("Friend name :");
+                            String newFriend = scanner.next();
+                            friends.add(newFriend);
+                            table.put(p);
+                            break;
+                        case 7:
+                            if(!friends.isEmpty()){
+                                p.add(Bytes.toBytes("friends"), Bytes.toBytes("friendList"), WritableUtils.toByteArray(toWritable(friends)));
+                            }
+                            table.put(p);
+                            friends.clear();
+                            secondExit = true;
+                            break;
+                        default:
+                            System.out.println("This option is not available");
+                            break;
+
                     }
-
-                    if(optionFriend.equals("2")){
-                        friendExit=true;
-                    }
-
-                    else{
-                        System.out.println("Type 1 or 2");
-                    }
-
-
                 }
-
-                /***
-                 *
-                 */
-                Put p = new Put(Bytes.toBytes(id));
-                p.add(Bytes.toBytes("info"), Bytes.toBytes("familyName"), Bytes.toBytes(familyName));
-                p.add(Bytes.toBytes("friends"), Bytes.toBytes("BFF"), Bytes.toBytes(bestFriend));
-                p.add(Bytes.toBytes("friends"), Bytes.toBytes("friendList"), WritableUtils.toByteArray(toWritable(friends)));
-                p.add(Bytes.toBytes("info"), Bytes.toBytes("birthday"), Bytes.toBytes(birthDate));
-                p.add(Bytes.toBytes("info"), Bytes.toBytes("phoneNumber"), Bytes.toBytes(phoneNumber));
-                p.add(Bytes.toBytes("info"), Bytes.toBytes("address"), Bytes.toBytes(address));
-                p.add(Bytes.toBytes("info"), Bytes.toBytes("description"), Bytes.toBytes(description));
-                table.put(p);
-
-                System.out.println("******** PROFILE ADDED ********");
 
             } else if (option.equals("2")) {
                 exit = true;
