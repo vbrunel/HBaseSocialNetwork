@@ -20,6 +20,8 @@ import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.util.Bytes;
+import org.apache.commons.lang.StringUtils;
+
 import java.util.Date;
 import java.text.SimpleDateFormat;
 
@@ -27,6 +29,12 @@ public class HBaseSocialNetwork {
 
     private static Configuration config;
     private static HTable table;
+
+    /***
+     * Function to convert Array into a Writable ArrayList
+     * @param list
+     * @return
+     */
 
     public static Writable toWritable(ArrayList<String> list) {
         Writable[] content = new Writable[list.size()];
@@ -36,6 +44,11 @@ public class HBaseSocialNetwork {
         return new ArrayWritable(Text.class, content);
     }
 
+    /***
+     * Function to convert ArrayWritable into an Arraylist
+     * @param writable
+     * @return
+     */
     public static ArrayList<String> fromWritable(ArrayWritable writable) {
         Writable[] writables = ((ArrayWritable) writable).get();
         ArrayList<String> list = new ArrayList<String>(writables.length);
@@ -45,18 +58,16 @@ public class HBaseSocialNetwork {
         return list;
     }
 
-    /***public static addPersonn(){
-
-    }***/
 
     public static void main (String args[]) throws IOException {
 
         config = HBaseConfiguration.create();
         table = new HTable(config, "vbrunelHBaseTable");
         Scanner scanner = new Scanner(System.in);
-        boolean exit = false;
-        boolean secondExit = false;
+        boolean exit = false; //first REPL
+        boolean secondExit = false; //second REPL
 
+        //Main menu
         while(!exit){
 
             System.out.println("Choose any option :");
@@ -66,13 +77,17 @@ public class HBaseSocialNetwork {
             String option = scanner.next();
 
             if (option.equals("1")) {
+                //Id + BFF in order toc create a new profile
                 ArrayList<String> friends = new ArrayList<String>();
                 System.out.println("First Name :");
                 String id = scanner.next();
                 System.out.println("BFF :");
                 String bestFriend = scanner.next();
+
+                //Second menu
                 while(!secondExit) {
 
+                    //The user is free to add any other information in his profile
                     Put p = new Put(Bytes.toBytes(id));
                     p.add(Bytes.toBytes("friends"), Bytes.toBytes("BFF"), Bytes.toBytes(bestFriend));
                     table.put(p);
@@ -86,8 +101,7 @@ public class HBaseSocialNetwork {
                     System.out.println("6. Add friend");
                     System.out.println("7. Exit profile and save\n");
                     String secondOption = scanner.next();
-
-                    switch (Integer.parseInt(secondOption)) {
+                    switch (Integer.parseInt(StringUtils.isNumeric(secondOption) ? secondOption : "0")) {
 
                         case 1:
                             System.out.println("Family Name :");
