@@ -3,14 +3,14 @@ package HBase;
  * Created by tosnos on 02/11/16.
  */
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Scanner;
 import java.util.ArrayList;
+import java.io.ByteArrayInputStream;
+import java.io.DataInputStream;
 
-import org.apache.hadoop.io.ArrayWritable;
-import org.apache.hadoop.io.Writable;
-import org.apache.hadoop.io.Text;
-import org.apache.hadoop.io.WritableUtils;
+import org.apache.hadoop.io.*;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.client.Get;
@@ -64,15 +64,17 @@ public class HBaseSocialNetwork {
         config = HBaseConfiguration.create();
         table = new HTable(config, "vbrunelHBaseTable");
         Scanner scanner = new Scanner(System.in);
+        Scan s = new Scan();
         boolean exit = false; //first REPL
         boolean secondExit = false; //second REPL
 
         //Main menu
         while(!exit){
 
-            System.out.println("Choose any option :");
+            System.out.println("\nChoose any option :");
             System.out.println("1. Add a new personn");
-            System.out.println("2. Exit\n");
+            System.out.println("2. Display information concerning one profile");
+            System.out.println("3. Exit\n");
 
             String option = scanner.next();
 
@@ -153,8 +155,56 @@ public class HBaseSocialNetwork {
                     }
                 }
 
+
             } else if (option.equals("2")) {
+                System.out.println("First Name (id) :");
+                String firstName = scanner.next();
+                Get g = new Get(Bytes.toBytes(firstName));
+                Result r = table.get(g);
+                byte [] familyNameByte = r.getValue(Bytes.toBytes("info"), Bytes.toBytes("familyName"));
+                System.out.println("Family Name : "+Bytes.toString(familyNameByte));
+                byte [] BFFByte = r.getValue(Bytes.toBytes("friends"), Bytes.toBytes("BFF"));
+                System.out.println("BFF : "+Bytes.toString(BFFByte));
+                byte [] birthdateByte = r.getValue(Bytes.toBytes("info"), Bytes.toBytes("birthday"));
+                System.out.println("Birthday : "+Bytes.toString(birthdateByte));
+                byte [] addressByte = r.getValue(Bytes.toBytes("info"), Bytes.toBytes("address"));
+                System.out.println("Address : "+Bytes.toString(addressByte));
+                byte [] phoneNumberByte = r.getValue(Bytes.toBytes("info"), Bytes.toBytes("phoneNumber"));
+                System.out.println("Phone Number : "+Bytes.toString(phoneNumberByte));
+                byte [] descriptionByte = r.getValue(Bytes.toBytes("info"), Bytes.toBytes("description"));
+                System.out.println("Bio : "+Bytes.toString(descriptionByte));
+
+                try{
+                    ArrayWritable friendsListWritable = new ArrayWritable(Text.class);
+                    friendsListWritable.readFields(
+                            new DataInputStream(
+                                    new ByteArrayInputStream(
+                                            r.getValue(Bytes.toBytes("friends"), Bytes.toBytes("friendList"))
+                                    )
+                            )
+                    );
+                    ArrayList<String> friendsList = fromWritable(friendsListWritable);
+                    System.out.println("Friends " + friendsList.toString());
+                } catch (NullPointerException e) {}
+
+
+            } else if (option.equals("3")) {
                 exit = true;
+
+            /***} else if (option.equals("4")) {
+
+                try {
+                s.addColumn(Bytes.toBytes("friends"), Bytes.toBytes("friendList"));
+                ResultScanner resScan = table.getScanner(s);
+
+                    for (Result rr = resScan.next(); rr != null; rr = resScan.next()) {
+                        System.out.println("Found row: " + rr);
+                    }
+
+                } catch (IllegalStateException e) {}
+                finally {
+                    scanner.close();
+                }***/
 
             } else {
                 System.out.println("Option not available");
