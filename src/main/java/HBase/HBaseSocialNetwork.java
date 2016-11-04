@@ -71,6 +71,7 @@ public class HBaseSocialNetwork {
         //Main menu
         while(!exit){
 
+            secondExit = false;
             System.out.println("\nChoose any option :");
             System.out.println("1. Add a new personn");
             System.out.println("2. Display information concerning one profile");
